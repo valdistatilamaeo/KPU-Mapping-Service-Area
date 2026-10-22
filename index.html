@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trigatra Sistem Integrasi - Pemetaan Interaktif KPU Project</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Space Grotesk (Sci-Fi) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons 6.5 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Leaflet MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  
+  <!-- Custom Styling: Hijau - Biru - Putih + Sci-Fi Vector & Island HUD Theme -->
+  <link rel="stylesheet" href="style.css?v=3.5">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <!-- Sidebar: All-in-One Pusat Data, Filter, Detail & Rekap KPU -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Header with TSI Brand Logo -->
+      <header class="sidebar-header">
+        <div class="brand">
+          <div class="brand-logo-container">
+            <img src="TSI LOGOS-04.png" alt="Logo PT Trigatra Sinergi Indonesia" class="brand-logo-img" onerror="this.style.display='none'; document.getElementById('fallbackIcon').style.display='flex';">
+            <div id="fallbackIcon" class="brand-badge-fallback" style="display:none;">
+              <i class="fa-solid fa-network-wired"></i>
+            </div>
+          </div>
+          <div class="brand-info">
+            <h1 class="brand-title">Trigatra Sistem Integrasi</h1>
+            <p class="subtitle"><i class="fa-solid fa-circle-check"></i> KPU GIS Project • PT TSI</p>
+          </div>
+        </div>
+        <button id="toggleSidebarBtn" class="icon-btn mobile-only" title="Tutup Menu">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </header>
+
+      <!-- 1. Sleek Scope Island Buttons (Pilih Pulau / Wilayah) -->
+      <div class="sidebar-scope-compact">
+        <div class="scope-label-row">
+          <span class="scope-title"><i class="fa-solid fa-earth-asia"></i> Pilih Pulau:</span>
+          <span class="scope-active-badge" id="activeScopeBadge">Seluruh Indonesia</span>
+        </div>
+        <div class="island-pills-row" id="sidebarIslandGrid">
+          <button class="scope-pill-btn active" data-island="ALL">Semua (392)</button>
+          <button class="scope-pill-btn" data-island="Sumatera">Sumatera (108)</button>
+          <button class="scope-pill-btn" data-island="Jawa">Jawa (99)</button>
+          <button class="scope-pill-btn" data-island="Sulawesi">Sulawesi (60)</button>
+          <button class="scope-pill-btn" data-island="Kalimantan">Kalimantan (54)</button>
+          <button class="scope-pill-btn" data-island="Papua">Papua (35)</button>
+          <button class="scope-pill-btn" data-island="Maluku">Maluku (20)</button>
+          <button class="scope-pill-btn" data-island="Bali & Nusa Tenggara">Bali & Nusra (16)</button>
+        </div>
+      </div>
+
+      <!-- 2. Compact Search & Filter Row -->
+      <div class="sidebar-filter-compact">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Cari nama kantor KPU, kota, PIC, telp..." autocomplete="off">
+          <button id="clearSearchBtn" class="clear-btn" style="display: none;">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+        <div class="filter-row">
+          <div class="select-wrapper">
+            <i class="fa-solid fa-map-location-dot select-icon"></i>
+            <select id="provinceFilter" autocomplete="off">
+              <option value="ALL">Semua Provinsi</option>
+            </select>
+          </div>
+          <div class="select-wrapper">
+            <i class="fa-solid fa-user-gear select-icon"></i>
+            <select id="engineerFilter" autocomplete="off">
+              <option value="ALL">Semua Engineer PIC</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Sleek Single-Line Metrics Strip (Ringkas & Informatif) -->
+      <div class="sidebar-metrics-strip">
+        <div class="metric-item metric-green">
+          <span class="m-val" id="statTotalPoints">392</span>
+          <span class="m-lbl">Kantor KPU</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item metric-blue">
+          <span class="m-val" id="statTotalProvinces">34</span>
+          <span class="m-lbl">Provinsi</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item metric-white">
+          <span class="m-val" id="statTotalEngineers">117</span>
+          <span class="m-lbl">Engineer PIC</span>
+        </div>
+      </div>
+
+      <!-- 4. Quick Province Chips (Horizontal Scrollable Strip) -->
+      <div class="province-quick-strip" id="provinceQuickChips">
+        <!-- Injected dynamically via app.js -->
+      </div>
+
+      <!-- 5. Main Scrollable List of KPU Offices (Maksimum Area & Scrolling Smooth) -->
+      <div class="data-list-container">
+        <div class="list-header">
+          <span class="list-title"><i class="fa-solid fa-building-columns"></i> Detail Identitas Kantor KPU</span>
+          <span class="list-counter" id="listCounter">392 lokasi</span>
+        </div>
+        <div class="point-list" id="pointList">
+          <!-- Dynamic Cards with Office Name, PIC, Phone, WA, Address, Coordinates, Gmaps -->
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="sidebar-footer">
+        <div class="footer-brand">
+          <span class="dot-status"></span>
+          <span>PT Trigatra Sinergi Indonesia • Sistem Integrasi 2026</span>
+        </div>
+      </footer>
+    </aside>
+
+    <!-- Main Map View Area: 100% Bersih & Luas Tanpa Floating Windows -->
+    <main class="map-view" id="mapViewContainer">
+      <!-- Floating Top Header Bar -->
+      <div class="map-overlay-top" id="mapOverlayTop">
+        <button id="mobileMenuBtn" class="map-ctrl-btn mobile-only">
+          <i class="fa-solid fa-bars"></i> Menu & Data
+        </button>
+
+        <!-- Minimalis: HANYA 3 PILIHAN LAYER PETA (Jalan, Hybrid, Sci-Fi) -->
+        <div class="layer-selector">
+          <button class="layer-btn" data-layer="streets" id="btnLayerStreets" title="Peta Jalan Vektor HD">
+            <i class="fa-solid fa-map"></i> Jalan
+          </button>
+          <button class="layer-btn active" data-layer="hybrid" id="btnLayerHybrid" title="Citra Satelit + Label Nama Jalan & Batas Wilayah">
+            <i class="fa-solid fa-earth-asia"></i> Hybrid
+          </button>
+          <button class="layer-btn" data-layer="scifi" id="btnLayerSciFi" title="Mode Vektor Holografik Taktis Gelap (Indonesia Only)">
+            <i class="fa-solid fa-microchip"></i> Sci-Fi
+          </button>
+        </div>
+
+        <!-- Quick Navigation Tools & Capture PNG Button -->
+        <div class="map-quick-tools">
+          <button class="map-ctrl-btn btn-screenshot" id="btnCaptureMap" title="Capture Screenshot Peta ke File Gambar PNG">
+            <i class="fa-solid fa-camera"></i> Capture Peta PNG
+          </button>
+          <button class="map-ctrl-btn btn-zoom-action" id="btnQuickZoomIn" title="Perbesar Peta (Zoom In)">
+            <i class="fa-solid fa-plus"></i> Zoom +
+          </button>
+          <button class="map-ctrl-btn btn-zoom-action" id="btnQuickZoomOut" title="Perkecil Peta (Zoom Out)">
+            <i class="fa-solid fa-minus"></i> Zoom -
+          </button>
+          <button class="map-ctrl-btn active" id="btnToggleBorders" title="Tampilkan Garis Batas Provinsi">
+            <i class="fa-solid fa-draw-polygon"></i> Batas: <span id="borderStatusText">ON</span>
+          </button>
+          <button class="map-ctrl-btn active" id="btnToggleProvinceLabels" title="Tampilkan Rekap Total KPU per Provinsi">
+            <i class="fa-solid fa-tags"></i> Rekap: <span id="labelStatusText">ON</span>
+          </button>
+          <button class="map-ctrl-btn active" id="btnTogglePointMode" title="Ubah Mode Penanda: Titik Titik Kecil Akurat vs Bubble Cluster">
+            <i class="fa-solid fa-location-dot"></i> Titik: <span id="pointModeText">DOT AKURAT</span>
+          </button>
+          <button class="map-ctrl-btn" id="btnFitBounds" title="Tampilkan Seluruh Titik Indonesia">
+            <i class="fa-solid fa-expand"></i> Semua
+          </button>
+        </div>
+      </div>
+
+      <!-- Leaflet Map Container -->
+      <div id="map"></div>
+
+      <!-- Floating Map Zoom Controls (Zoom In, Zoom Out, Indicator, Reset) -->
+      <div class="map-floating-zoom-control" id="mapZoomControls">
+        <button class="zoom-btn" id="btnFloatingZoomIn" title="Perbesar Peta (Zoom In)">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <div class="zoom-indicator" id="mapZoomIndicator" title="Tingkat Zoom Saat Ini">5x</div>
+        <button class="zoom-btn" id="btnFloatingZoomOut" title="Perkecil Peta (Zoom Out)">
+          <i class="fa-solid fa-minus"></i>
+        </button>
+        <button class="zoom-btn zoom-btn-reset" id="btnFloatingReset" title="Fokus Seluruh Indonesia">
+          <i class="fa-solid fa-arrows-to-eye"></i>
+        </button>
+      </div>
+
+      <!-- Sci-Fi Tactical Grid Overlay (Active in Sci-Fi Vector mode) -->
+      <div class="scifi-grid-overlay" id="scifiGridOverlay" style="display: none;">
+        <div class="scifi-corner scifi-top-left"></div>
+        <div class="scifi-corner scifi-top-right"></div>
+        <div class="scifi-corner scifi-bottom-left"></div>
+        <div class="scifi-corner scifi-bottom-right"></div>
+        <div class="scifi-watermark">TRIGATRA SISTEM INTEGRASI // TACTICAL GIS VECTOR // KPU RI</div>
+      </div>
+
+      <!-- Bottom Floating Legend -->
+      <div class="map-legend" id="mapLegend">
+        <div class="legend-item">
+          <span class="legend-dot marker-active"></span> Terpilih (Biru)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot marker-normal"></span> Titik KPU (Hijau - Biru)
+        </div>
+        <div class="legend-item">
+          <span class="legend-border-line"></span> Batas Provinsi
+        </div>
+        <div class="legend-sep">|</div>
+        <span class="legend-info"><i class="fa-solid fa-crosshairs"></i> Presisi Koordinat Akurat</span>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Screenshot Preview & Direct Download -->
+  <div class="screenshot-modal-overlay" id="screenshotModal" style="display: none;">
+    <div class="screenshot-modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <i class="fa-solid fa-camera" style="color: #38bdf8;"></i>
+          <h4 id="screenshotModalTitle">Hasil Capture Peta Service Area KPU</h4>
+        </div>
+        <button class="modal-close-btn" id="btnCloseScreenshotModal" title="Tutup">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="screenshot-img-container">
+          <img id="screenshotPreviewImg" src="" alt="Pratinjau Screenshot Peta">
+        </div>
+        <div class="screenshot-meta-notice">
+          <i class="fa-solid fa-circle-check" style="color: #34d399;"></i>
+          <span id="screenshotStatusNotice">File gambar PNG beresolusi tinggi berhasil dibuat dan diunduh.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-secondary" id="btnOpenNewTab">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Gambar di Tab Baru
+        </button>
+        <button class="modal-btn modal-btn-primary" id="btnDownloadAgain">
+          <i class="fa-solid fa-download"></i> Unduh Lagi (.PNG)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HTML2Canvas Library for High-Res PNG Screenshot Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Standalone Province Boundaries GeoJSON (34 Indonesian Provinces) -->
+  <script src="provinces.js"></script>
+  <!-- Standalone Local Data (Zero-CORS, works immediately on double-click file:///) -->
+  <script src="data.js"></script>
+  <!-- SheetJS (xlsx library) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Leaflet MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <!-- Application Logic -->
+  <script src="app.js?v=3.5"></script>
+</body>
+</html>
